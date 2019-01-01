@@ -5,6 +5,7 @@ import twitter
 from textblob import TextBlob
 import re
 import os
+
 class Artist:
 
   CONSUMER_KEY=os.environ["CONSUMER_KEY"]
@@ -20,11 +21,13 @@ class Artist:
   def __init__(self, name):
     self.name = name
     self.albums = []
-    self.__df = pd.DataFrame(columns=['user', 'location', 'sentiment', 'followers','retweets'])
+    self.__df = pd.DataFrame(columns=['user', 'location', 'text', 'sentiment', 'followers','retweets'])
 
   # Returns an Array of dictionaries where the location is available
   def search_twitter(self):
-    response = self.__api.GetSearch(term=self.name, count=100)
+    # TODO Chance count back to 100 once i get a reliable way to extract multiple tweets
+    # and put into the dataframe
+    response = self.__api.GetSearch(term=self.name, count=10)
     ret = []
     for r in response:
       d = r.AsDict()
@@ -39,7 +42,6 @@ class Artist:
   # Scores tweet's sentiment
   def get_tweet_sentiment(self, tweet):
     analysis = TextBlob(self.__clean_tweet(tweet))
-    print(analysis.sentiment.polarity)
     if analysis.sentiment.polarity > 0:
       return 'positive'
     elif analysis.sentiment.polarity == 0:
@@ -48,13 +50,21 @@ class Artist:
       return 'negative'
 
 
-  def store_data(self, arr):
-    pass
-
-
-
-
+  #'user', 'location', 'text', 'sentiment', 'followers','retweets']
+  def store_data(self):
+    arr = self.search_twitter()
+    # Iterate through dictionary and append rows
+    for d in arr:
+      new_dict = {'text': d['text'], 'location':d['user']['location'],
+          'retweets': d.get( 'retweet_count' ),
+          'followers': d['user']['followers_count'],
+          'user': d['user']['name'], 'sentiment': self.get_tweet_sentiment(d['text'])}
+      print(self.__df)
+      self.__df = self.__df.append(pd.Series(new_dict), ignore_index=True)
+      print(self.__df)
 
 drake = Artist('Drake')
-print(drake.search_twitter())
+drake.store_data()
+
+
 
