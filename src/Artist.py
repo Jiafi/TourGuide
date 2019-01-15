@@ -11,6 +11,7 @@ class Artist:
   #TODO If i change whats storing into dataframe I must change the dataframe as well.
   # If i change sentiment to a number, must change datframe as well.
   __path = "./data/"
+
   CONSUMER_KEY=os.environ["CONSUMER_KEY"]
   CONSUMER_SECRET=os.environ[ "CONSUMER_SECRET" ]
   ACCESS_TOKEN_KEY=os.environ[ "ACCESS_TOKEN_KEY" ]
@@ -21,6 +22,8 @@ class Artist:
                       access_token_key=ACCESS_TOKEN_KEY,
                       access_token_secret=ACCESS_TOKEN_SECRET)
 
+  __columns =['user', 'location', 'text', 'sentiment', 'followers','retweets', 'favorites']
+
   def __init__(self, name, handle):
     self.handle = handle
     self.name = name
@@ -28,9 +31,8 @@ class Artist:
     self.file_name = name + '_data.csv'
     try:
       self.__df = pd.read_csv(self.__path + self.file_name)
-      print("hello")
     except IOError:
-      self.__df = pd.DataFrame(columns=['user', 'location', 'text', 'sentiment', 'followers','retweets'])
+      self.__df = pd.DataFrame(columns=self.__columns)
 
   # Returns an Array of dictionaries where the location is available
   def search_twitter(self):
@@ -67,7 +69,8 @@ class Artist:
       new_dict = {'text': d['text'], 'location':d['user']['location'],
           'retweets': d.get( 'retweet_count' ),
           'followers': d['user']['followers_count'],
-          'user': d['user']['name'], 'sentiment': self.get_tweet_sentiment(d['text'])}
+          'user': d['user']['name'], 'sentiment': self.get_tweet_sentiment(d['text']),
+          'favorites': d['user']['favourites_count']}
       self.__df = self.__df.append(pd.Series(new_dict), ignore_index=True)
     self.__df.replace({r'[^\x00-\x7F]+':''}, regex=True, inplace=True)
     self.__df = self.__df.loc[:, ~self.__df.columns.str.contains('^Unnamed')]
@@ -76,7 +79,12 @@ class Artist:
     # Output to .csv
     self.__df.to_csv(self.__path + self.file_name)
 
+  def reset_dataframe(self):
+    self.__df = pd.DataFrame(columns=self.__columns)
+
+
 drake = Artist('Drake', '@Drake')
+drake.reset_dataframe()
 drake.store_data()
 
 
