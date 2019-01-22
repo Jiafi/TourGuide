@@ -6,8 +6,13 @@ from textblob import TextBlob
 import re
 import os
 import string
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 
 class Artist:
+
   #TODO If i change whats storing into dataframe I must change the dataframe as well.
   # If i change sentiment to a number, must change datframe as well.
   __path = "./data/"
@@ -54,11 +59,11 @@ class Artist:
   def get_tweet_sentiment(self, tweet):
     analysis = TextBlob(self.__clean_tweet(tweet))
     if analysis.sentiment.polarity > 0:
-      return 'positive'
+      return 1
     elif analysis.sentiment.polarity == 0:
-      return 'neutral'
+      return 0
     else:
-      return 'negative'
+      return -1
 
 
   #'user', 'location', 'text', 'sentiment', 'followers','retweets']
@@ -86,8 +91,18 @@ class Artist:
     pass
 
 
+  def create_graph(self):
+    # Groupby city name then graph
+    sentiment_df = self.__df.groupby('location')['sentiment'].sum()
+    ax = sentiment_df.plot.bar(x='location', y='sentiment', title= self.name + ": Total\
+ Sentiment vs. Location", figsize= (20,25), legend=True, fontsize=12, grid=True)
+    ax.set_xlabel('Location', fontsize=12)
+    ax.set_ylabel('Total Sentiment', fontsize=12)
+    ax.get_figure().savefig('./data/'+ self.name + '_graph.png')
+
+
 drake = Artist('Drake', '@Drake')
-drake.reset_dataframe()
 drake.store_data()
+drake.create_graph()
 
 
