@@ -82,6 +82,9 @@ class Artist:
   def reset_dataframe(self):
     self.__df = pd.DataFrame(columns=self.__columns)
 
+  def clean_data(self):
+    pass
+
 
 drake = Artist('Drake', '@Drake')
 drake.reset_dataframe()
